@@ -1,5 +1,3 @@
-const 정답 = "APPLE";
-
 let attempts = 0;
 let index = 0;
 let timer;
@@ -44,28 +42,40 @@ function appStart() {
     clearInterval(timer);
   };
 
-  const handleEnterKey = () => {
+  const handleEnterKey = async () => {
     let 맞은_개수 = 0;
-    if (index !== 5) return;
-    for (let i = 0; i < 5; i++) {
-      const block = document.querySelector(
-        `.board-block[data-index='${attempts}${i}']`
-      );
-      if (block) {
-        const 입력한_글자 = block.innerText;
-        const 정답_글자 = 정답[i];
-        if (입력한_글자 === 정답_글자) {
-          맞은_개수 += 1;
-          block.style.background = "#6AAA64";
-        } else if (정답.includes(입력한_글자))
-          block.style.background = "#C9B458";
-        else block.style.background = "#787C7E";
-        block.style.color = "white";
-        console.log("입력한 글자:", 입력한_글자, "정답_글자:", 정답_글자);
+    // 서버에서 정답을 받아오는 코드
+    try {
+      const 응답 = await fetch("/answer");
+      const 정답_객체 = await 응답.json();
+      const 정답 = 정답_객체.answer;
+
+      if (index !== 5) return;
+
+      for (let i = 0; i < 5; i++) {
+        const block = document.querySelector(
+          `.board-block[data-index='${attempts}${i}']`
+        );
+        if (block) {
+          const 입력한_글자 = block.innerText;
+          const 정답_글자 = 정답[i];
+          if (입력한_글자 === 정답_글자) {
+            맞은_개수 += 1;
+            block.style.background = "#6AAA64";
+          } else if (정답.includes(입력한_글자))
+            block.style.background = "#C9B458";
+          else block.style.background = "#787C7E";
+          block.style.color = "white";
+          console.log("입력한 글자:", 입력한_글자, "정답_글자:", 정답_글자);
+        } else {
+          console.warn(`Block with data-index='${attempts}${i}' not found.`);
+        }
       }
+      if (맞은_개수 === 5) gameover();
+      else nextLine();
+    } catch (error) {
+      console.error("Error fetching or processing the answer:", error);
     }
-    if (맞은_개수 === 5) gameover();
-    else nextLine();
   };
 
   const handleKeydown = (event) => {
